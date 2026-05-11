@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Genou">
+<meta name="theme-color" content="#0c0c10">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Protocole Genou</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0c0c10;
+  --bg2: #13131a;
+  --bg3: #1a1a24;
+  --border: #1e1e2e;
+  --text: #e0e0ec;
+  --muted: #666;
+  --dim: #333;
+  --amber: #f59e0b;
+  --blue: #3b82f6;
+  --green: #10b981;
+  --red: #ef4444;
+  --purple: #a855f7;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body { height:100%; overflow:hidden; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── NAV ── */
+.nav {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: color .2s;
+}
+.nav-item.active { color: var(--amber); }
+.nav-icon { font-size: 20px; }
+
+/* ── SCROLL CONTAINER ── */
+.pages { flex: 1; overflow: hidden; position: relative; }
+.page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 16px 14px calc(16px + var(--safe-bottom));
+  display: none;
+  -webkit-overflow-scrolling: touch;
+}
+.page.active { display: block; }
+
+/* ── COMMON ── */
+h2 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.page-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 18px; }
+
+.card {
+  background: var(--bg2);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.card-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--muted); font-family: 'DM Mono', monospace;
+  margin-bottom: 10px;
+}
+
+.badge {
+  font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.8px; font-family: 'DM Mono', monospace;
+  display: inline-block; margin-bottom: 8px;
+}
+
+/* ── PAIN SCALE ── */
+.pain-scale { display:flex; gap:6px; }
+.pain-btn {
+  flex:1; padding:10px 4px; border-radius:10px; border:1px solid;
+  font-size:13px; font-weight:700; cursor:pointer; text-align:center;
+  transition: all .15s; background: transparent;
+}
+.pain-btn .pain-lbl { font-size:9px; font-weight:400; display:block; margin-top:2px; }
+.pain-0-3 { color:var(--green); border-color:#10b98130; }
+.pain-0-3.sel { background:#10b98125; }
+.pain-4-5 { color:var(--amber); border-color:#f59e0b30; }
+.pain-4-5.sel { background:#f59e0b25; }
+.pain-6p { color:var(--red); border-color:#ef444430; }
+.pain-6p.sel { background:#ef444425; }
+
+/* ── EXERCISE CARD ── */
+.ex-card {
+  background: #0c0c12;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.ex-fig { flex-shrink:0; }
+.ex-info { flex:1; min-width:0; }
+.ex-name { font-size:13px; font-weight:700; color:#fff; margin-bottom:4px; }
+.ex-detail { font-size:11px; color:#888; line-height:1.6; }
+.ex-note {
+  font-size:10px; color:var(--amber); margin-top:6px;
+  padding:4px 8px; background:#f59e0b0d;
+  border-radius:6px; border-left:2px solid var(--amber);
+}
+
+/* ── AGENDA ── */
+.week-block { margin-bottom:8px; border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+.week-hdr {
+  padding:8px 12px; display:flex; align-items:center; gap:6px;
+  background: var(--bg2); flex-wrap:wrap;
+}
+.week-num { font-size:9px; font-weight:700; font-family:'DM Mono',monospace; color:var(--muted); }
+.week-dates { font-size:10px; color:var(--dim); font-family:'DM Mono',monospace; }
+.week-badge {
+  font-size:8px; font-weight:700; padding:2px 6px; border-radius:20px;
+  text-transform:uppercase; letter-spacing:0.6px; font-family:'DM Mono',monospace;
+  margin-left:auto;
+}
+.days-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+.day-cell {
+  padding:6px 2px; text-align:center;
+  border-top:1px solid var(--border); border-right:1px solid var(--border);
+  min-height:64px;
+}
+.day-cell:last-child { border-right:none; }
+.day-nm { font-size:7px; font-weight:700; text-transform:uppercase; color:var(--dim); font-family:'DM Mono',monospace; margin-bottom:2px; }
+.day-dt { font-size:10px; font-weight:700; color:var(--muted); margin-bottom:3px; }
+.day-dt.today {
+  color:#fff; background:#ffffff18; border-radius:50%;
+  width:20px; height:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 3px;
+}
+.dtag {
+  font-size:7px; font-weight:600; padding:1px 4px; border-radius:3px;
+  display:block; margin:1px auto; line-height:1.4; max-width:46px;
+}
+.dtag-iso { background:#f59e0b15; color:var(--amber); border:1px solid #f59e0b25; }
+.dtag-renfo { background:#3b82f615; color:var(--blue); border:1px solid #3b82f625; }
+.dtag-sport { background:#8b5cf615; color:#8b5cf6; border:1px solid #8b5cf625; }
+.dtag-race { background:#ef444415; color:var(--red); border:1px solid #ef444425; }
+.dtag-rest { background:#ffffff05; color:var(--dim); border:1px solid #ffffff0f; }
+.dtag-recup { background:#10b98115; color:var(--green); border:1px solid #10b98125; }
+.dtag-coll { background:#10b98108; color:var(--green); border:1px solid #10b98118; font-size:6px; }
+.milestone-tag { font-size:7px; color:var(--red); font-weight:700; margin-top:1px; display:block; }
+.milestone-green { color:var(--green); }
+.month-sep { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--dim); font-family:'DM Mono',monospace; padding:14px 0 5px; }
+
+/* ── TRACKER ── */
+.tracker-date-hdr {
+  font-size:14px; font-weight:700; color:#fff;
+  text-align:center; margin-bottom:4px;
+}
+.tracker-sub {
+  font-size:11px; color:var(--muted); text-align:center;
+  font-family:'DM Mono',monospace; margin-bottom:16px;
+}
+
+.pain-slider-wrap { margin: 8px 0 4px; }
+.pain-slider {
+  width:100%; -webkit-appearance:none; appearance:none;
+  height:6px; border-radius:3px; outline:none; cursor:pointer;
+  background: linear-gradient(to right, var(--green) 0%, var(--green) 30%, var(--amber) 30%, var(--amber) 50%, var(--red) 50%, var(--red) 100%);
+}
+.pain-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:22px; height:22px; border-radius:50%;
+  background:#fff; border:3px solid var(--amber); cursor:pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.pain-value-display {
+  text-align:center; font-size:32px; font-weight:700;
+  margin: 8px 0 4px; transition: color .2s;
+}
+.pain-labels { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); font-family:'DM Mono',monospace; margin-bottom:12px; }
+
+.check-group { display:flex; flex-direction:column; gap:8px; margin:8px 0; }
+.check-item {
+  display:flex; align-items:center; gap:10px;
+  background:#0c0c12; border-radius:10px; padding:10px 12px;
+  border:1px solid var(--border); cursor:pointer; transition:border-color .15s;
+}
+.check-item.checked { border-color: var(--green); }
+.check-box {
+  width:20px; height:20px; border-radius:6px; border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; transition: all .15s; font-size:13px;
+}
+.check-item.checked .check-box { background:var(--green); border-color:var(--green); }
+.check-label { font-size:12px; color:var(--text); }
+
+.note-input {
+  width:100%; background:#0c0c12; border:1px solid var(--border);
+  border-radius:10px; padding:10px 12px; color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:12px;
+  resize:none; outline:none; min-height:70px;
+  transition: border-color .15s;
+}
+.note-input:focus { border-color: var(--blue); }
+
+.save-btn {
+  width:100%; padding:14px; border-radius:12px; border:none;
+  background: var(--amber); color:#000; font-size:14px; font-weight:700;
+  cursor:pointer; margin-top:4px; font-family:'DM Sans',sans-serif;
+  transition: opacity .15s; letter-spacing: -0.2px;
+}
+.save-btn:active { opacity:0.8; }
+
+/* HISTORY */
+.history-entry {
+  background:#0c0c12; border-radius:10px; padding:10px 12px;
+  margin-bottom:6px; border:1px solid var(--border);
+  display:flex; gap:10px; align-items:center;
+}
+.hist-date { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; min-width:60px; }
+.hist-pain {
+  font-size:16px; font-weight:700; min-width:28px; text-align:center;
+}
+.hist-checks { font-size:10px; color:var(--muted); flex:1; line-height:1.5; }
+.hist-note { font-size:10px; color:#555; font-style:italic; }
+
+.empty-state { text-align:center; padding:40px 20px; color:var(--dim); font-size:13px; }
+
+/* MILESTONES SUMMARY */
+.milestone-row {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:8px 0; border-bottom:1px solid var(--border);
+}
+.milestone-row:last-child { border-bottom:none; }
+.ms-date { font-size:10px; color:var(--muted); font-family:'DM Mono',monospace; min-width:75px; }
+.ms-text { font-size:12px; color:#aaa; line-height:1.4; }
+.ms-text strong { color:var(--text); }
+
+/* TABS inside a page */
+.inner-tabs { display:flex; gap:4px; margin-bottom:14px; }
+.inner-tab {
+  flex:1; padding:8px 4px; border-radius:8px; border:1px solid var(--border);
+  background:transparent; color:var(--muted); font-size:11px; font-family:'DM Mono',monospace;
+  text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; transition: all .15s;
+}
+.inner-tab.active { background:var(--amber); color:#000; border-color:var(--amber); font-weight:700; }
+
+.inner-page { display:none; }
+.inner-page.active { display:block; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:calc(70px + var(--safe-bottom)); left:50%; transform:translateX(-50%) translateY(20px);
+  background:#fff; color:#000; padding:10px 20px; border-radius:20px;
+  font-size:13px; font-weight:600; opacity:0; transition: all .3s; pointer-events:none; white-space:nowrap;
+  z-index:999;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* RULE BOX */
+.rule-box {
+  background:#0c0c12; border-radius:10px; padding:10px 12px;
+  margin-bottom:8px; display:flex; gap:8px; align-items:flex-start;
+  border:1px solid var(--border);
+}
+.rule-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+.rule-text { font-size:11px; color:#aaa; line-height:1.6; }
+.rule-text strong { color:var(--text); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-item active" onclick="showPage('protocole')">
+    <span class="nav-icon">📋</span>Protocole
+  </button>
+  <button class="nav-item" onclick="showPage('agenda')">
+    <span class="nav-icon">📅</span>Agenda
+  </button>
+  <button class="nav-item" onclick="showPage('tracker')">
+    <span class="nav-icon">📊</span>Tracker
+  </button>
+</nav>
+
+<div class="pages">
+
+<!-- ═══════════════════════════════════════════
+     PAGE : PROTOCOLE
+═══════════════════════════════════════════ -->
+<div id="page-protocole" class="page active">
+  <h2>Protocole Genou</h2>
+  <p class="page-sub">IRM 07/02/2025 · 20 semaines</p>
+
+  <!-- Règle douleur -->
+  <div class="card" style="border-color:#a855f730;">
+    <div class="card-title">⚖️ Règle d'or — douleur</div>
+    <div class="pain-scale">
+      <div class="pain-btn pain-0-3">0–3<span class="pain-lbl">✅ Continue</span></div>
+      <div class="pain-btn pain-4-5">4–5<span class="pain-lbl">⚠️ Réduis</span></div>
+      <div class="pain-btn pain-6p">6+<span class="pain-lbl">🛑 Stop</span></div>
+    </div>
+    <div style="margin-top:10px;">
+      <div class="rule-box">
+        <span class="rule-icon">🌅</span>
+        <span class="rule-text"><strong>Vrai indicateur = lendemain matin.</strong> Douleur identique ou moins → charge OK. Augmentée → tu as trop fait.</span>
+      </div>
+      <div class="rule-box">
+        <span class="rule-icon">🧠</span>
+        <span class="rule-text"><strong>3/10 en pratique :</strong> tu sens le genou mais tu ne compenses pas ton mouvement. Dès que tu boites → 4+.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nutrition -->
+  <div class="card" style="border-color:#10b98130;">
+    <div class="card-title">🥗 Nutrition · chaque jour</div>
+    <div class="rule-box">
+      <span class="rule-icon">⏱</span>
+      <span class="rule-text"><strong>45–60 min avant renforcement :</strong> 15g collagène hydrolysé + 50mg vitamine C. Active la synthèse de collagène.</span>
+    </div>
+    <div class="rule-box">
+      <span class="rule-icon">🥩</span>
+      <span class="rule-text"><strong>Protéines : 1,8–2g/kg/jour</strong><br><strong>Oméga-3 : 2–3g EPA+DHA/jour</strong><br>Calories neutres ou légèrement positives.</span>
+    </div>
+    <div class="rule-box">
+      <span class="rule-icon">🚫</span>
+      <span class="rule-text"><strong>Stop ibuprofène et AINS.</strong> Ralentissent la réparation tendineuse (bloquent COX-2).</span>
+    </div>
+  </div>
+
+  <!-- Inner tabs phases -->
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showPhase('p1')">Phase 1</button>
+    <button class="inner-tab" onclick="showPhase('p2')">Phase 2</button>
+    <button class="inner-tab" onclick="showPhase('p3')">Phase 3</button>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div id="phase-p1" class="inner-page active">
+    <div class="card" style="border-color:#f59e0b30;">
+      <span class="badge" style="background:#f59e0b15;color:#f59e0b;">Phase 1 · Sem. 1–4</span>
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;">Isométrie + contrôle de charge</div>
+
+      <div class="card-title">Exercice clé — 2×/jour</div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <rect x="68" y="0" width="4" height="100" fill="#2a2a3a" rx="2"/>
+            <circle cx="40" cy="14" r="8" fill="none" stroke="#f59e0b" stroke-width="2"/>
+            <line x1="40" y1="22" x2="40" y2="52" stroke="#f59e0b" stroke-width="2.5"/>
+            <line x1="40" y1="32" x2="28" y2="44" stroke="#f59e0b" stroke-width="2"/>
+            <line x1="40" y1="32" x2="52" y2="36" stroke="#f59e0b" stroke-width="2"/>
+            <line x1="40" y1="52" x2="20" y2="55" stroke="#f59e0b" stroke-width="2.5"/>
+            <line x1="40" y1="52" x2="60" y2="55" stroke="#f59e0b" stroke-width="2.5"/>
+            <line x1="20" y1="55" x2="18" y2="85" stroke="#f59e0b" stroke-width="2.5"/>
+            <line x1="60" y1="55" x2="62" y2="85" stroke="#f59e0b" stroke-width="2.5"/>
+            <line x1="18" y1="85" x2="10" y2="88" stroke="#f59e0b" stroke-width="2"/>
+            <line x1="62" y1="85" x2="70" y2="88" stroke="#f59e0b" stroke-width="2"/>
+            <text x="2" y="72" font-size="8" fill="#f59e0b" opacity="0.7" font-family="monospace">90°</text>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">Chaise murale isométrique</div>
+          <div class="ex-detail">Dos plaqué au mur · pieds à 50cm<br>Cuisses parallèles au sol (90°)<br><strong>5 × 45 secondes</strong> · repos 2 min<br>Si douloureux → remonte à 45°</div>
+          <div class="ex-note">⚡ Effet analgésique ~45 min → faire juste avant l'entraînement</div>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top:12px;">✅ Autorisé</div>
+      <div class="rule-box">
+        <span class="rule-icon">💪</span>
+        <span class="rule-text">Sled push/pull · Rowing · Ski erg · Mouvements haut du corps · Course zone 2 (≤ 3/10)</span>
+      </div>
+      <div class="card-title">🚫 Éviter</div>
+      <div class="rule-box">
+        <span class="rule-icon">⛔</span>
+        <span class="rule-text">Box jumps · Double unders · Burpees sautés · Squats lourds rapides · Sprints</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div id="phase-p2" class="inner-page">
+    <div class="card" style="border-color:#3b82f630;">
+      <span class="badge" style="background:#3b82f615;color:#3b82f6;">Phase 2 · Sem. 4–12</span>
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">Renforcement isotonique lent</div>
+      <div style="font-size:11px;color:#666;margin-bottom:12px;">3×/semaine · jamais 2 jours consécutifs</div>
+      <div class="ex-note" style="margin-bottom:12px;">⚡ Toujours commencer par l'isométrie + collagène 45 min avant</div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <rect x="50" y="10" width="24" height="55" fill="#1e1e2a" rx="4"/>
+            <rect x="48" y="14" width="28" height="6" fill="#3b82f6" rx="2" opacity="0.5"/>
+            <rect x="2" y="55" width="30" height="8" fill="#2a2a3a" rx="3"/>
+            <rect x="2" y="40" width="8" height="22" fill="#2a2a3a" rx="2"/>
+            <circle cx="17" cy="25" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="17" y1="32" x2="17" y2="55" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="17" y1="40" x2="8" y2="50" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="17" y1="40" x2="26" y2="50" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="17" y1="55" x2="42" y2="38" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="17" y1="55" x2="42" y2="28" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="42" y1="38" x2="52" y2="20" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="42" y1="28" x2="52" y2="15" stroke="#3b82f6" stroke-width="2.5"/>
+            <text x="2" y="95" font-size="8" fill="#3b82f6" opacity="0.7" font-family="monospace">3s/3s</text>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">1. Leg Press tempo lent</div>
+          <div class="ex-detail"><strong>4 × 15 reps</strong><br>Tempo 3s descente / 3s montée<br>Charge progressive chaque semaine</div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <rect x="45" y="60" width="28" height="6" fill="#2a2a3a" rx="3"/>
+            <rect x="48" y="66" width="5" height="15" fill="#2a2a3a" rx="2"/>
+            <rect x="64" y="66" width="5" height="15" fill="#2a2a3a" rx="2"/>
+            <circle cx="30" cy="14" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="30" y1="21" x2="28" y2="50" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="28" y1="35" x2="16" y2="45" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="28" y1="35" x2="40" y2="45" stroke="#3b82f6" stroke-width="2"/>
+            <rect x="10" y="44" width="8" height="4" fill="#3b82f6" rx="1" opacity="0.6"/>
+            <rect x="40" y="44" width="8" height="4" fill="#3b82f6" rx="1" opacity="0.6"/>
+            <line x1="28" y1="50" x2="20" y2="70" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="20" y1="70" x2="15" y2="92" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="15" y1="92" x2="8" y2="95" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="28" y1="50" x2="45" y2="55" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="45" y1="55" x2="50" y2="62" stroke="#3b82f6" stroke-width="2.5"/>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">2. Bulgarian Split Squat</div>
+          <div class="ex-detail">Pied arrière sur banc<br><strong>3 × 10 par jambe</strong> · tempo lent<br>Charge progressive</div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <rect x="36" y="88" width="8" height="6" fill="#2a2a3a" rx="2"/>
+            <line x1="40" y1="88" x2="28" y2="72" stroke="#10b981" stroke-width="2" stroke-dasharray="3,2"/>
+            <line x1="40" y1="88" x2="52" y2="72" stroke="#10b981" stroke-width="2" stroke-dasharray="3,2"/>
+            <circle cx="40" cy="12" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="40" y1="19" x2="40" y2="50" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="40" y1="30" x2="28" y2="40" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="40" y1="30" x2="52" y2="40" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="40" y1="50" x2="22" y2="62" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="40" y1="50" x2="58" y2="62" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="22" y1="62" x2="22" y2="88" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="58" y1="62" x2="58" y2="88" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="22" y1="88" x2="14" y2="92" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="58" y1="88" x2="66" y2="92" stroke="#3b82f6" stroke-width="2"/>
+            <text x="2" y="80" font-size="7" fill="#10b981" opacity="0.8" font-family="monospace">tibia ↕</text>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">3. Spanish Squat</div>
+          <div class="ex-detail">Élastique fixé devant · tibia vertical<br><strong>3 × 15</strong> · tempo lent<br>Spécifique tendinopathie patellaire</div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <rect x="8" y="46" width="64" height="5" fill="#2a2a3a" rx="2"/>
+            <circle cx="12" cy="48" r="6" fill="#2a2a3a" stroke="#3b82f6" stroke-width="1.5"/>
+            <circle cx="68" cy="48" r="6" fill="#2a2a3a" stroke="#3b82f6" stroke-width="1.5"/>
+            <circle cx="40" cy="12" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="40" y1="19" x2="40" y2="47" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="40" y1="30" x2="30" y2="48" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="40" y1="30" x2="50" y2="48" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="40" y1="47" x2="30" y2="60" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="40" y1="47" x2="50" y2="60" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="30" y1="60" x2="28" y2="88" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="50" y1="60" x2="52" y2="88" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="28" y1="88" x2="18" y2="92" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="52" y1="88" x2="62" y2="92" stroke="#3b82f6" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">4. Romanian Deadlift</div>
+          <div class="ex-detail"><strong>3 × 12</strong> · charge modérée<br>Ischios + fessiers<br>Décharge le tendon patellaire</div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <line x1="0" y1="72" x2="80" y2="72" stroke="#2a2a3a" stroke-width="2"/>
+            <circle cx="14" cy="46" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
+            <line x1="14" y1="53" x2="70" y2="53" stroke="#3b82f6" stroke-width="3"/>
+            <line x1="14" y1="53" x2="10" y2="70" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="30" y1="53" x2="26" y2="70" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="70" y1="53" x2="72" y2="70" stroke="#3b82f6" stroke-width="2.5"/>
+            <line x1="64" y1="53" x2="66" y2="70" stroke="#3b82f6" stroke-width="2.5"/>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">5. Gainage profond</div>
+          <div class="ex-detail">Planche · Dead bug · Pallof press<br><strong>3 × 30–45 sec</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div id="phase-p3" class="inner-page">
+    <div class="card" style="border-color:#10b98130;">
+      <span class="badge" style="background:#10b98115;color:#10b981;">Phase 3 · Sem. 12–20</span>
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:12px;">Retour à la puissance</div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <rect x="40" y="60" width="35" height="28" fill="#1e1e2a" rx="4"/>
+            <rect x="40" y="60" width="35" height="6" fill="#10b981" rx="2" opacity="0.5"/>
+            <circle cx="22" cy="18" r="7" fill="none" stroke="#10b981" stroke-width="2"/>
+            <line x1="22" y1="25" x2="24" y2="48" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="24" y1="35" x2="12" y2="25" stroke="#10b981" stroke-width="2"/>
+            <line x1="24" y1="35" x2="36" y2="25" stroke="#10b981" stroke-width="2"/>
+            <line x1="24" y1="48" x2="16" y2="65" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="24" y1="48" x2="32" y2="62" stroke="#10b981" stroke-width="2.5"/>
+            <text x="2" y="55" font-size="7" fill="#10b981" opacity="0.7" font-family="monospace">réception</text>
+            <text x="2" y="63" font-size="7" fill="#10b981" opacity="0.7" font-family="monospace">lente ↓</text>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">Box Jumps — réintroduction</div>
+          <div class="ex-detail">Réception lente et contrôlée<br>Hauteur progressive sur 4 semaines<br><strong>À partir sem. 12</strong></div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-fig">
+          <svg width="70" height="88" viewBox="0 0 80 100">
+            <circle cx="40" cy="14" r="7" fill="none" stroke="#10b981" stroke-width="2"/>
+            <line x1="40" y1="21" x2="38" y2="48" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="38" y1="32" x2="24" y2="42" stroke="#10b981" stroke-width="2"/>
+            <line x1="38" y1="32" x2="52" y2="24" stroke="#10b981" stroke-width="2"/>
+            <line x1="38" y1="48" x2="28" y2="66" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="28" y1="66" x2="22" y2="88" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="22" y1="88" x2="14" y2="92" stroke="#10b981" stroke-width="2"/>
+            <line x1="38" y1="48" x2="52" y2="58" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="52" y1="58" x2="58" y2="42" stroke="#10b981" stroke-width="2.5"/>
+            <text x="2" y="98" font-size="7" fill="#10b981" opacity="0.7" font-family="monospace">+10%/sem</text>
+          </svg>
+        </div>
+        <div class="ex-info">
+          <div class="ex-name">Retour à la course</div>
+          <div class="ex-detail">Run/walk : 1 min / 1 min<br>+10% volume max par semaine<br><strong>Course continue → sem. 16</strong></div>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top:4px;">Ordre réintroduction Hyrox</div>
+      <div class="rule-box"><span class="rule-icon">✅</span><span class="rule-text"><strong>Sem. 1+</strong> Sled · Rowing · Ski erg</span></div>
+      <div class="rule-box"><span class="rule-icon">📅</span><span class="rule-text"><strong>Sem. 8</strong> Lunges chargés</span></div>
+      <div class="rule-box"><span class="rule-icon">📅</span><span class="rule-text"><strong>Sem. 12</strong> Box jumps légers</span></div>
+      <div class="rule-box"><span class="rule-icon">📅</span><span class="rule-text"><strong>Sem. 14</strong> Wall balls</span></div>
+      <div class="rule-box"><span class="rule-icon">📅</span><span class="rule-text"><strong>Sem. 16</strong> Burpees broad jump</span></div>
+      <div class="rule-box"><span class="rule-icon">🏁</span><span class="rule-text"><strong>Sem. 20</strong> Hyrox complet</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE : AGENDA
+═══════════════════════════════════════════ -->
+<div id="page-agenda" class="page">
+  <h2>Agenda</h2>
+  <p class="page-sub">Début : 08 mai 2025 · 20 semaines</p>
+
+  <!-- Milestones -->
+  <div class="card">
+    <div class="card-title">🏁 Jalons clés</div>
+    <div class="milestone-row"><div class="ms-date">08 mai</div><div class="ms-text">🟡 <strong>Début protocole</strong> · 1ère isométrie</div></div>
+    <div class="milestone-row"><div class="ms-date">17 mai</div><div class="ms-text">🔴 <strong>Compétition Hyrox</strong> · ISO le matin</div></div>
+    <div class="milestone-row"><div class="ms-date">18–20 mai</div><div class="ms-text">🟢 <strong>Récup post-compét</strong> · 3 jours légers</div></div>
+    <div class="milestone-row"><div class="ms-date">~05 juin</div><div class="ms-text">🔵 <strong>Début Phase 2</strong> · si douleur réduite</div></div>
+    <div class="milestone-row"><div class="ms-date">~04 août</div><div class="ms-text">🟢 <strong>Début Phase 3</strong> · retour puissance</div></div>
+    <div class="milestone-row" style="border:none"><div class="ms-date">~27 sept.</div><div class="ms-text">🏁 <strong>Hyrox complet</strong> sans douleur</div></div>
+  </div>
+
+  <div class="month-sep">— Mai 2025</div>
+
+  <!-- SEM 0 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 0</span>
+      <span class="week-dates">05–11 mai</span>
+      <span class="week-badge" style="background:#ef444415;color:#ef4444;">Pré-compét + Début ISO</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><div class="day-dt">05</div><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><div class="day-dt">06</div><span class="dtag dtag-rest">Léger</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><div class="day-dt">07</div><span class="dtag dtag-rest">Léger</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><div class="day-dt">08</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span><span class="milestone-tag">▶ Début</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><div class="day-dt">09</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><div class="day-dt">10</div><span class="dtag dtag-iso">ISO ×5</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><div class="day-dt">11</div><span class="dtag dtag-iso">ISO matin</span><span class="dtag dtag-rest">Repos</span></div>
+    </div>
+  </div>
+
+  <!-- SEM 1 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 1</span>
+      <span class="week-dates">12–18 mai</span>
+      <span class="week-badge" style="background:#ef444415;color:#ef4444;">Compétition Hyrox</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><div class="day-dt">12</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><div class="day-dt">13</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">Sport léger</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><div class="day-dt">14</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><div class="day-dt">15</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><div class="day-dt">16</div><span class="dtag dtag-iso">ISO matin</span><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><div class="day-dt">17</div><span class="dtag dtag-iso">ISO avant</span><span class="dtag dtag-race">🏁 HYROX</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><div class="day-dt">18</div><span class="dtag dtag-recup">Récup</span></div>
+    </div>
+  </div>
+
+  <!-- SEM 2 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 2</span>
+      <span class="week-dates">19–25 mai</span>
+      <span class="week-badge" style="background:#f59e0b15;color:#f59e0b;">Phase 1 · Récup post-compét</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><div class="day-dt">19</div><span class="dtag dtag-recup">Récup</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><div class="day-dt">20</div><span class="dtag dtag-recup">Récup</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><div class="day-dt">21</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><div class="day-dt">22</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">Sport léger</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><div class="day-dt">23</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><div class="day-dt">24</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">Sport léger</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><div class="day-dt">25</div><span class="dtag dtag-rest">Repos</span></div>
+    </div>
+  </div>
+
+  <!-- SEM 3 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 3</span>
+      <span class="week-dates">26 mai – 01 juin</span>
+      <span class="week-badge" style="background:#f59e0b15;color:#f59e0b;">Phase 1 · ISO quotidien</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><div class="day-dt">26</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">CrossFit</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><div class="day-dt">27</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><div class="day-dt">28</div><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><div class="day-dt">29</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">CrossFit</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><div class="day-dt">30</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><div class="day-dt">31</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">Course Z2</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><div class="day-dt">01</div><span class="dtag dtag-rest">Repos</span></div>
+    </div>
+  </div>
+
+  <div class="month-sep">— Juin 2025</div>
+
+  <!-- SEM 4 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 4</span>
+      <span class="week-dates">02–08 juin</span>
+      <span class="week-badge" style="background:#3b82f615;color:#3b82f6;">Évaluation → Phase 2 ?</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><div class="day-dt">02</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">CrossFit</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><div class="day-dt">03</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><div class="day-dt">04</div><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><div class="day-dt">05</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">CrossFit</span><span class="milestone-tag">✓ Bilan</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><div class="day-dt">06</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><div class="day-dt">07</div><span class="dtag dtag-iso">ISO ×5</span><span class="dtag dtag-sport">Course Z2</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><div class="day-dt">08</div><span class="dtag dtag-rest">Repos</span></div>
+    </div>
+  </div>
+
+  <!-- SEM 5-8 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 5–8</span>
+      <span class="week-dates">09 juin – 06 juil.</span>
+      <span class="week-badge" style="background:#3b82f615;color:#3b82f6;">Phase 2 · Renfo 3×/sem</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><span class="dtag dtag-iso">ISO avant</span><span class="dtag dtag-renfo">Renfo</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><span class="dtag dtag-sport">CrossFit</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><span class="dtag dtag-iso">ISO avant</span><span class="dtag dtag-renfo">Renfo</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><span class="dtag dtag-sport">CrossFit</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><span class="dtag dtag-iso">ISO avant</span><span class="dtag dtag-renfo">Renfo</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><span class="dtag dtag-rest">Repos</span></div>
+    </div>
+  </div>
+
+  <div class="month-sep">— Juillet – Août 2025</div>
+
+  <!-- SEM 9-12 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 9–12</span>
+      <span class="week-dates">07 juil. – 03 août</span>
+      <span class="week-badge" style="background:#3b82f615;color:#3b82f6;">Phase 2 · Charge progressive</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><span class="dtag dtag-iso">ISO avant</span><span class="dtag dtag-renfo">Renfo ↑</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><span class="dtag dtag-sport">CrossFit+</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><span class="dtag dtag-iso">ISO avant</span><span class="dtag dtag-renfo">Renfo ↑</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><span class="dtag dtag-sport">Course+</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><span class="dtag dtag-iso">ISO avant</span><span class="dtag dtag-renfo">Renfo ↑</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><span class="dtag dtag-rest">Repos</span></div>
+    </div>
+  </div>
+
+  <!-- SEM 13-20 -->
+  <div class="week-block">
+    <div class="week-hdr">
+      <span class="week-num">SEM 13–20</span>
+      <span class="week-dates">04 août – 27 sept.</span>
+      <span class="week-badge" style="background:#10b98115;color:#10b981;">Phase 3 · Retour puissance</span>
+    </div>
+    <div class="days-grid">
+      <div class="day-cell"><div class="day-nm">Lun</div><span class="dtag dtag-renfo">Renfo</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Mar</div><span class="dtag dtag-sport">CrossFit ✓</span></div>
+      <div class="day-cell"><div class="day-nm">Mer</div><span class="dtag dtag-rest">Repos</span></div>
+      <div class="day-cell"><div class="day-nm">Jeu</div><span class="dtag dtag-renfo">Renfo</span><span class="dtag dtag-coll">Collagène</span></div>
+      <div class="day-cell"><div class="day-nm">Ven</div><span class="dtag dtag-sport">Course ✓</span></div>
+      <div class="day-cell"><div class="day-nm">Sam</div><span class="dtag dtag-sport">Hyrox sim.</span></div>
+      <div class="day-cell"><div class="day-nm">Dim</div><span class="dtag dtag-rest">Repos</span></div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:16px 0 4px;">
+    <div style="display:inline-block;background:#10b98115;border:1px solid #10b98130;border-radius:12px;padding:12px 20px;">
+      <div style="font-size:20px;margin-bottom:4px;">🏁</div>
+      <div style="font-size:13px;font-weight:700;color:#10b981;">~27 septembre 2025</div>
+      <div style="font-size:11px;color:#555;margin-top:2px;">Hyrox complet · sans douleur</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE : TRACKER
+═══════════════════════════════════════════ -->
+<div id="page-tracker" class="page">
+  <h2>Tracker quotidien</h2>
+  <p class="page-sub">Enregistre ta douleur chaque jour</p>
+
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showTrackerTab('log')">Saisie</button>
+    <button class="inner-tab" onclick="showTrackerTab('history')">Historique</button>
+  </div>
+
+  <!-- LOG -->
+  <div id="tracker-log" class="inner-page active">
+    <div class="card">
+      <div class="tracker-date-hdr" id="today-label"></div>
+      <div class="tracker-sub">Comment est ton genou aujourd'hui ?</div>
+
+      <div class="card-title">Douleur au réveil (0–10)</div>
+      <div class="pain-slider-wrap">
+        <input type="range" class="pain-slider" id="morning-pain" min="0" max="10" value="0" oninput="updatePainDisplay('morning-pain','morning-val')">
+      </div>
+      <div class="pain-value-display" id="morning-val">0</div>
+      <div class="pain-labels"><span>0 — aucune</span><span>5 — modérée</span><span>10 — max</span></div>
+
+      <div class="card-title">Douleur max pendant effort (0–10)</div>
+      <div class="pain-slider-wrap">
+        <input type="range" class="pain-slider" id="effort-pain" min="0" max="10" value="0" oninput="updatePainDisplay('effort-pain','effort-val')">
+      </div>
+      <div class="pain-value-display" id="effort-val">0</div>
+      <div class="pain-labels"><span>0 — aucune</span><span>5 — modérée</span><span>10 — max</span></div>
+
+      <div class="card-title" style="margin-top:4px;">Fait aujourd'hui</div>
+      <div class="check-group" id="checklist">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <span class="check-label">💊 Collagène + Vitamine C</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <span class="check-label">🦵 Isométrie (chaise murale)</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <span class="check-label">💪 Renforcement</span>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="check-box">✓</div>
+          <span class="check-label">🏃 Course / CrossFit / Hyrox</span>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top:12px;">Note libre</div>
+      <textarea class="note-input" id="day-note" placeholder="Comment s'est passée la session ? Ressentis particuliers..."></textarea>
+
+      <button class="save-btn" onclick="saveEntry()">Enregistrer la journée</button>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="tracker-history" class="inner-page">
+    <div id="history-list">
+      <div class="empty-state">Aucune entrée pour le moment.<br>Commence à tracker ta douleur quotidiennement.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /pages -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── REGISTER SW ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ── NAV ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item')[['protocole','agenda','tracker'].indexOf(name)].classList.add('active');
+}
+
+// ── INNER TABS PHASES ──
+function showPhase(id) {
+  document.querySelectorAll('#page-protocole .inner-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#page-protocole .inner-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('phase-' + id).classList.add('active');
+  const idx = ['p1','p2','p3'].indexOf(id);
+  document.querySelectorAll('#page-protocole .inner-tab')[idx].classList.add('active');
+}
+
+// ── INNER TABS TRACKER ──
+function showTrackerTab(id) {
+  document.querySelectorAll('#page-tracker .inner-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#page-tracker .inner-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tracker-' + id).classList.add('active');
+  const idx = ['log','history'].indexOf(id);
+  document.querySelectorAll('#page-tracker .inner-tab')[idx].classList.add('active');
+  if (id === 'history') renderHistory();
+}
+
+// ── TODAY LABEL ──
+function initTodayLabel() {
+  const now = new Date();
+  const opts = { weekday:'long', day:'numeric', month:'long' };
+  document.getElementById('today-label').textContent = now.toLocaleDateString('fr-FR', opts);
+}
+initTodayLabel();
+
+// ── PAIN SLIDER ──
+function updatePainDisplay(sliderId, displayId) {
+  const val = parseInt(document.getElementById(sliderId).value);
+  const el = document.getElementById(displayId);
+  el.textContent = val;
+  el.style.color = val <= 3 ? 'var(--green)' : val <= 5 ? 'var(--amber)' : 'var(--red)';
+}
+
+// ── CHECKLIST ──
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+}
+
+// ── STORAGE ──
+function getEntries() {
+  try { return JSON.parse(localStorage.getItem('genou-entries') || '[]'); } catch { return []; }
+}
+function saveEntries(arr) {
+  localStorage.setItem('genou-entries', JSON.stringify(arr));
+}
+
+// ── SAVE ──
+function saveEntry() {
+  const now = new Date();
+  const dateKey = now.toISOString().split('T')[0];
+  const morningPain = parseInt(document.getElementById('morning-pain').value);
+  const effortPain = parseInt(document.getElementById('effort-pain').value);
+  const checks = [...document.querySelectorAll('#checklist .check-item')].map(el => ({
+    label: el.querySelector('.check-label').textContent,
+    done: el.classList.contains('checked')
+  }));
+  const note = document.getElementById('day-note').value.trim();
+
+  const entries = getEntries().filter(e => e.date !== dateKey);
+  entries.unshift({ date: dateKey, morningPain, effortPain, checks, note });
+  saveEntries(entries);
+
+  // reset
+  document.getElementById('morning-pain').value = 0;
+  document.getElementById('effort-pain').value = 0;
+  updatePainDisplay('morning-pain', 'morning-val');
+  updatePainDisplay('effort-pain', 'effort-val');
+  document.querySelectorAll('#checklist .check-item').forEach(el => el.classList.remove('checked'));
+  document.getElementById('day-note').value = '';
+
+  showToast('✅ Journée enregistrée !');
+}
+
+// ── RENDER HISTORY ──
+function renderHistory() {
+  const entries = getEntries();
+  const container = document.getElementById('history-list');
+  if (!entries.length) {
+    container.innerHTML = '<div class="empty-state">Aucune entrée pour le moment.<br>Commence à tracker ta douleur quotidiennement.</div>';
+    return;
+  }
+  container.innerHTML = entries.map(e => {
+    const d = new Date(e.date + 'T12:00:00');
+    const dateStr = d.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' });
+    const doneChecks = e.checks.filter(c => c.done).map(c => c.label.split(' ').slice(1).join(' ')).join(' · ');
+    const mpColor = e.morningPain <= 3 ? 'var(--green)' : e.morningPain <= 5 ? 'var(--amber)' : 'var(--red)';
+    const epColor = e.effortPain <= 3 ? 'var(--green)' : e.effortPain <= 5 ? 'var(--amber)' : 'var(--red)';
+    return `<div class="history-entry">
+      <div class="hist-date">${dateStr}</div>
+      <div>
+        <span class="hist-pain" style="color:${mpColor}">${e.morningPain}</span>
+        <span style="font-size:9px;color:var(--muted);display:block;text-align:center">matin</span>
+      </div>
+      <div>
+        <span class="hist-pain" style="color:${epColor}">${e.effortPain}</span>
+        <span style="font-size:9px;color:var(--muted);display:block;text-align:center">effort</span>
+      </div>
+      <div class="hist-checks">
+        ${doneChecks || '<span style="color:var(--dim)">rien coché</span>'}
+        ${e.note ? `<div class="hist-note">${e.note}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── HIGHLIGHT TODAY IN AGENDA ──
+function highlightToday() {
+  const today = new Date();
+  const day = today.getDate();
+  const month = today.getMonth(); // 0-indexed
+  document.querySelectorAll('.day-dt').forEach(el => {
+    const num = parseInt(el.textContent);
+    // rough match — highlight if day number matches and we're in may
+    if (num === day && month === 4) {
+      el.classList.add('today');
+    }
+  });
+}
+highlightToday();
+</script>
+</body>
+</html>
